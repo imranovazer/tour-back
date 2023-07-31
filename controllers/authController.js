@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const { promisify } = require("util");
 const jwt = require("jsonwebtoken");
-const User = require("./../models/userModel");
+const User = require("./../models/User.js");
 
 const Email = require("./../utils/email");
 // const Email = require("./../utils/email");
@@ -203,9 +203,10 @@ exports.forgotPassword = async (req, res, next) => {
 
     // 3) Send it to user's email
     try {
+      console.log(req.protocol, req.get("host"));
       const resetURL = `${req.protocol}://${req.get(
         "host"
-      )}/api/v1/users/resetPassword/${resetToken}`;
+      )}/api/users/resetPassword/${resetToken}`;
       await new Email(user, resetURL).sendPasswordReset();
 
       res.status(200).json({

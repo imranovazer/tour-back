@@ -15,8 +15,7 @@ const userRouter = require("./routes/userRoutes");
 // Start express app
 const app = express();
 
-app.enable("trust proxy");
-
+// app.enable("trust proxy");
 app.use(cors());
 
 app.options("*", cors());

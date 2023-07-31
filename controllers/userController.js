@@ -1,6 +1,6 @@
 const multer = require("multer");
 const sharp = require("sharp");
-const User = require("./../models/userModel");
+const User = require("./../models/User.js");
 
 const multerStorage = multer.memoryStorage();
 
@@ -8,7 +8,7 @@ const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image")) {
     cb(null, true);
   } else {
-    cb(new AppError("Not an image! Please upload only images.", 400), false);
+    cb(new Error("Not an image! Please upload only images."), false);
   }
 };
 
@@ -19,19 +19,23 @@ const upload = multer({
 
 exports.uploadUserPhoto = upload.single("photo");
 
-exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
-  if (!req.file) return next();
+exports.resizeUserPhoto = async (req, res, next) => {
+  try {
+    if (!req.file) return next();
 
-  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+    req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
 
-  await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(`public/img/users/${req.file.filename}`);
+    await sharp(req.file.buffer)
+      .resize(500, 500)
+      .toFormat("jpeg")
+      .jpeg({ quality: 90 })
+      .toFile(`public/img/users/${req.file.filename}`);
 
-  next();
-});
+    next();
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -165,5 +169,25 @@ exports.deleteUserById = async (req, res, next) => {
       status: "fail",
       error,
     });
+  }
+};
+exports.createUser = async (req, res, next) => {
+  try {
+    const { name, email, photo, role, password, passwordConfirm } = req.body;
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      photo,
+      role,
+      passwordConfirm,
+    });
+    res.status(201).json({
+      status: "success",
+      data: user,
+    });
+  } catch (error) {
+    res.status(400).json({ status: "fail", error });
   }
 };

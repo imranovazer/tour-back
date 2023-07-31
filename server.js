@@ -8,8 +8,6 @@ const DB = process.env.MONGO_DB;
 mongoose
   .connect(DB, {
     useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
   })
   .then(() => console.log("DB connection successful!"));
 
