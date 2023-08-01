@@ -44,7 +44,7 @@ router
 
 router
   .route("/:id")
-  .get(tourController.getTour)
+  .get(tourController.getTourById)
   .patch(
     authController.protect,
     authController.restrictTo("admin", "lead-guide"),
