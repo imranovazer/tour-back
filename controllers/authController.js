@@ -7,16 +7,30 @@ const Email = require("./../utils/email");
 // const Email = require("./../utils/email");
 
 const signToken = (id) => {
-  return jwt.sign({ id }, process.env.SECRET_KEY, {
-    expiresIn: "10d",
+  const access = jwt.sign({ id }, process.env.SECRET_KEY, {
+    expiresIn: 15 * 60,
   });
+
+  const refresh = jwt.sign({ id }, process.env.SECRET_KEY_REFRESH, {
+    expiresIn: '7d'
+  })
+
+  return { access, refresh }
 };
 
-const createSendToken = (user, statusCode, req, res) => {
-  const token = signToken(user._id);
 
-  res.cookie("jwt", token, {
-    expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+
+
+const createSendToken = (user, statusCode, req, res) => {
+  const { access, refresh } = signToken(user._id);
+
+  res.cookie("access", access, {
+    expires: new Date(Date.now() + 60 * 1000),
+    httpOnly: true,
+    secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+  });
+  res.cookie("refresh", refresh, {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     httpOnly: true,
     secure: req.secure || req.headers["x-forwarded-proto"] === "https",
   });
@@ -26,12 +40,17 @@ const createSendToken = (user, statusCode, req, res) => {
 
   res.status(statusCode).json({
     status: "success",
-    token,
+    tokens: {
+      access,
+      refresh
+    },
     data: {
       user,
     },
   });
 };
+
+
 
 exports.signup = async (req, res, next) => {
   try {
@@ -83,12 +102,65 @@ exports.login = async (req, res, next) => {
 };
 
 exports.logout = (req, res) => {
-  res.cookie("jwt", "loggedout", {
+  res.cookie("access", "loggedout", {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.cookie("refresh", "loggedout", {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
   });
   res.status(200).json({ status: "success" });
 };
+
+exports.refreshToken = async (req, res) => {
+  try {
+    let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    } else if (req.cookies.refresh) {
+      token = req.cookies.refresh;
+    }
+
+    if (!token) {
+      return res.status(401).json({
+        status: "fail",
+        message: "You don't have refresh token",
+      });
+    }
+    const decoded = await jwt.verify(token, process.env.SECRET_KEY_REFRESH);
+
+    // 3) Check if user still exists
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+      return res.status(401).json({
+        status: "fail",
+        message: "User doesn't exsists",
+      });
+    }
+
+    // 4) Check if user changed password after the token was issued
+    if (currentUser.changedPasswordAfter(decoded.iat)) {
+      return res.status(401).json({
+        status: "fail",
+        message: "User changed password log in again",
+      });
+    }
+
+    createSendToken(currentUser, 200, req, res);
+
+
+  } catch (error) {
+    return res.status(500).json({
+      status: "fail",
+      error,
+    });
+
+  }
+}
 
 exports.protect = async (req, res, next) => {
   try {
@@ -99,8 +171,8 @@ exports.protect = async (req, res, next) => {
       req.headers.authorization.startsWith("Bearer")
     ) {
       token = req.headers.authorization.split(" ")[1];
-    } else if (req.cookies.jwt) {
-      token = req.cookies.jwt;
+    } else if (req.cookies.access) {
+      token = req.cookies.access;
     }
 
     if (!token) {

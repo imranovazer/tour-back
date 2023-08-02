@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 router.get("/logout", authController.logout);
-
+router.get("/refresh-token", authController.refreshToken)
 router.post("/forgotPassword", authController.forgotPassword);
 router.patch("/resetPassword/:token", authController.resetPassword);
 
@@ -24,7 +24,7 @@ router.patch(
 );
 router.delete("/deleteMe", userController.deleteMe);
 
-router.use(authController.restrictTo("admin"));
+// router.use(authController.restrictTo("admin"));
 
 router
   .route("/")
