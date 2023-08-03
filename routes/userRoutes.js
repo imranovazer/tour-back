@@ -4,11 +4,12 @@ const authController = require("./../controllers/authController");
 
 const router = express.Router();
 
+router.post("/refresh-token", authController.refreshToken)
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 router.get("/logout", authController.logout);
-router.get("/refresh-token", authController.refreshToken)
-router.post("/forgotPassword", authController.forgotPassword);
+router.post("/echo", authController.isAuth)
+router.post("/forgot-password", authController.forgotPassword);
 router.patch("/resetPassword/:token", authController.resetPassword);
 
 // Protect all routes after this middleware

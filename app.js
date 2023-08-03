@@ -16,9 +16,12 @@ const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+}));
 
-app.options("*", cors());
+// app.options("*", cors());
 
 app.use(express.static(path.join(__dirname, "public")));
 
