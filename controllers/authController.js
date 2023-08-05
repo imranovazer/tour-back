@@ -59,7 +59,8 @@ exports.isAuth = async (req, res) => {
     }
 
     res.status(200).json({
-      status: 'success'
+      status: 'success',
+      data: currentUser
     })
   } catch (error) {
     return res.status(401).json({
@@ -289,10 +290,8 @@ exports.forgotPassword = async (req, res, next) => {
 
     // 3) Send it to user's email
     try {
-      console.log(req.protocol, req.get("host"));
-      const resetURL = `${req.protocol}://${req.get(
-        "host"
-      )}/api/users/resetPassword/${resetToken}`;
+
+      const resetURL = `${process.env.FRONT_URL}/reset-password/${resetToken}`;
       await new Email(user, resetURL).sendPasswordReset();
 
       res.status(200).json({
@@ -317,6 +316,49 @@ exports.forgotPassword = async (req, res, next) => {
   }
   // 1) Get user based on POSTed email
 };
+
+
+exports.checkValidityOfResetPassword = async (req, res) => {
+  try {
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(403).json({
+        status: "fail",
+        message: "You don't have access to this page",
+      });
+
+    }
+    else {
+      return res.status(200).json(
+        {
+          status: 'success',
+          message: 'You have access to this page'
+        }
+      )
+
+    }
+
+  } catch (error) {
+    res.status(500).json(
+      {
+        staus: 'fail',
+        error
+      }
+    )
+
+  }
+
+
+}
 
 exports.resetPassword = async (req, res, next) => {
   try {
@@ -344,9 +386,14 @@ exports.resetPassword = async (req, res, next) => {
     user.passwordResetExpires = undefined;
     await user.save();
 
-    // 3) Update changedPasswordAt property for the user
-    // 4) Log the user in, send JWT
-    createSendToken(user, 200, req, res);
+    return res.status(200).json(
+      {
+        status: 'success',
+        message: 'Your password changed successfully'
+      }
+    )
+
+
   } catch (error) {
     return res.status(400).json({
       status: "fail",
