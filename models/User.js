@@ -8,6 +8,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please tell us your name!"],
   },
+  wallet: {
+    type: Number,
+    default: 0,
+    min: [0, "Amount can't be less than 0"]
+  },
   email: {
     type: String,
     required: [true, "Please provide your email"],
