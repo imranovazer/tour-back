@@ -13,6 +13,8 @@ router.post("/forgot-password", authController.forgotPassword);
 router.patch("/reset-password/:token", authController.resetPassword);
 router.post("/check-reset-token/:token", authController.checkValidityOfResetPassword)
 
+
+router.post('/mail', userController.sendMail)
 // Protect all routes after this middleware
 router.use(authController.protect);
 

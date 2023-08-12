@@ -32,6 +32,8 @@ module.exports = class Email {
     await this.newTransport().sendMail(mailOptions);
   }
 
+
+
   async sendPasswordReset() {
     await this.send(
       "passwordReset",
@@ -39,3 +41,6 @@ module.exports = class Email {
     );
   }
 };
+
+
+

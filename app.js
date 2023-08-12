@@ -13,8 +13,10 @@ const cors = require("cors");
 const userRouter = require("./routes/userRoutes");
 const tourRoutes = require("./routes/tourRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
-
+const bookingRoutes = require("./routes/bookingRoutes")
 const app = express();
+
+const bookingController = require('./controllers/bookingController')
 
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -27,7 +29,16 @@ app.use(express.static(path.join(__dirname, "public")));
 // app.use(express.static('public'))
 
 app.use(helmet());
-
+// app.post(
+//   '/webhook-checkout',
+//   bodyParser.raw({ type: 'application/json' }),
+//   bookingController.webhookCheckout
+// );
+app.post(
+  '/webhook-cash-in',
+  bodyParser.raw({ type: 'application/json' }),
+  bookingController.webhookCashIn
+);
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
@@ -56,4 +67,5 @@ app.use(compression());
 app.use("/api/users", userRouter);
 app.use("/api/tours", tourRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/bookings", bookingRoutes)
 module.exports = app;

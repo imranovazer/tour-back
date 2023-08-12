@@ -26,7 +26,7 @@ exports.getAllReviews = async (req, res) => {
       results: review.length,
       data: review,
     });
-  } catch (error) {}
+  } catch (error) { }
 };
 
 exports.getReviewById = async (req, res, next) => {
@@ -54,6 +54,7 @@ exports.getReviewById = async (req, res, next) => {
 
 exports.createReview = async (req, res, next) => {
   try {
+    console.log(req.body)
     const newReview = await Review.create(req.body);
 
     res.status(201).json({

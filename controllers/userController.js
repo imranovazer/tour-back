@@ -1,7 +1,7 @@
 const multer = require("multer");
 const sharp = require("sharp");
 const User = require("./../models/User.js");
-
+const nodemailer = require('nodemailer')
 const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
@@ -17,10 +17,50 @@ const upload = multer({
   fileFilter: multerFilter,
 });
 
+
+
+exports.sendMail = async (req, res) => {
+  try {
+    const { content, from } = req.body;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+    const mailOptions = {
+      from: process.env.EMAIL_USERNAME,
+      to: 'imranovazer@gmail.com',
+      subject: 'Contact us',
+      html: `<h3>Sender email : ${from}<h3>
+      <p>${content}</p>`,
+    };
+
+    const mail = await transporter.sendMail(mailOptions)
+    console.log(mail)
+    res.status(201).json({
+      status: 'success',
+      message: 'Mail sended'
+    })
+  } catch (error) {
+    res.status(500).json(
+      {
+        status: 'fail',
+        message: 'Unable to send email'
+      }
+    )
+  }
+
+}
+
 exports.uploadUserPhoto = upload.single("photo");
 
 exports.resizeUserPhoto = async (req, res, next) => {
   try {
+
+
     if (!req.file) return next();
 
     req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
