@@ -4,7 +4,7 @@ const Tour = require("./../models/Tour");
 
 const APIFeatures = require("../utils/apiFeatures");
 const multerStorage = multer.memoryStorage();
-
+const User = require('../models/User')
 const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image")) {
     cb(null, true);
@@ -174,6 +174,89 @@ exports.deleteTour = async (req, res, next) => {
     });
   }
 };
+
+exports.addToCart = async (req, res) => {
+  try {
+
+    const { tourId } = req.params;
+    const user = req.user
+
+
+    const finded = user.cart.find(item => item.product._id == tourId);
+    if (finded) {
+      finded.count = finded.count + 1
+      await user.save({ validateBeforeSave: false });
+    }
+    else {
+      user.cart = [...user.cart, { count: 1, product: tourId }]
+    }
+    await user.save({ validateBeforeSave: false });
+
+    res.status(201).json({
+      status: 'success',
+      data: user
+    })
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: 'fail',
+      error
+    })
+
+  }
+
+
+}
+exports.deleteFromCart = async (req, res) => {
+  try {
+    const user = req.user;
+    const { deleteone } = req.body;
+    console.log(deleteone);
+    //delete 
+    //deleteone
+    const { tourId } = req.params;
+    const finded = user.cart.find(item => item.product._id == tourId);
+    if (finded) {
+      if (finded.count == 1) {
+        user.cart = user.cart.filter(item => item.product._id != tourId);
+        await user.save({ validateBeforeSave: false });
+      }
+      else if (finded.count > 1) {
+        if (!deleteone) {
+          user.cart = user.cart.filter(item => item.product._id != tourId);
+          await user.save({ validateBeforeSave: false });
+        }
+        else if (deleteone) {
+          finded.count = finded.count - 1
+          await user.save({ validateBeforeSave: false });
+        }
+      }
+
+      res.status(200).json({
+        status: 'success',
+        data: user
+      })
+    }
+    else {
+
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Tour with that id not found in cart'
+      })
+
+    }
+
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      error
+    })
+
+  }
+
+
+}
 
 exports.getTourStats = async (req, res, next) => {
   try {

@@ -12,6 +12,12 @@ const router = express.Router();
 
 router.use("/:tourId/reviews", reviewRouter);
 
+
+//tourId
+router
+  .route("/cart/:tourId")
+  .post(authController.protect, tourController.addToCart)
+  .delete(authController.protect, tourController.deleteFromCart);
 router
   .route("/top-5-cheap")
   .get(tourController.aliasTopTours, tourController.getAllTours);

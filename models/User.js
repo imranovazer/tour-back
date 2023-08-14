@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const { isNumber } = require("util");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -13,6 +14,13 @@ const userSchema = new mongoose.Schema({
     default: 0,
     min: [0, "Amount can't be less than 0"]
   },
+  cart: [{
+    count: Number,
+    product: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Tour",
+    }
+  }],
   email: {
     type: String,
     required: [true, "Please provide your email"],
@@ -62,6 +70,15 @@ userSchema.pre("save", async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+userSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'cart', populate: {
+      path: 'product',
+
+    }
+  });
+  next();
+})
 
 userSchema.pre("save", function (next) {
   if (!this.isModified("password") || this.isNew) return next();

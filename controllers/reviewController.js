@@ -1,5 +1,6 @@
 const Review = require("./../models/Review");
 const APIFeatures = require("../utils/apiFeatures");
+const { login } = require("./authController");
 exports.setTourUserIds = (req, res, next) => {
   // Allow nested routes
   if (!req.body.tour) req.body.tour = req.params.tourId;
@@ -54,7 +55,7 @@ exports.getReviewById = async (req, res, next) => {
 
 exports.createReview = async (req, res, next) => {
   try {
-    console.log(req.body)
+
     const newReview = await Review.create(req.body);
 
     res.status(201).json({
@@ -62,6 +63,7 @@ exports.createReview = async (req, res, next) => {
       data: newReview,
     });
   } catch (error) {
+
     res.status(500).json({
       status: "fail",
       error,
@@ -69,31 +71,32 @@ exports.createReview = async (req, res, next) => {
   }
 };
 
-exports.updateReview = async (req, res, next) => {
+exports.updateReview = async (req, res) => {
   try {
-    const review = await Review.findByIdAndUpdate(req.params.id, req.body, {
+
+    const { rating, review } = req.body;
+    console.log(rating, review);
+    const newReview = await Review.findByIdAndUpdate(req.params.id, { rating, review }, {
       new: true,
       runValidators: true,
-    });
+    })
 
-    if (!review) {
-      return res.status(404).json({
-        status: "fail",
-        message: "No review found with that ID",
-      });
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: review,
-    });
+    return res.status(200).json(
+      {
+        status: 'success',
+        data: newReview
+      }
+    )
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      error,
-    });
+    console.log(error);
+    return res.status(500).json(
+      {
+        status: 'fail',
+        error
+      }
+    )
   }
-};
+}
 exports.deleteReview = async (req, res, next) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);

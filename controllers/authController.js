@@ -8,7 +8,7 @@ const Email = require("./../utils/email");
 
 const signToken = (id) => {
   const access = jwt.sign({ id }, process.env.SECRET_KEY, {
-    expiresIn: 15 * 60,
+    expiresIn: 100 * 60,
   });
 
   const refresh = jwt.sign({ id }, process.env.SECRET_KEY_REFRESH, {
