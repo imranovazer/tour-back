@@ -175,6 +175,8 @@ exports.deleteTour = async (req, res, next) => {
   }
 };
 
+
+
 exports.addToCart = async (req, res) => {
   try {
 
@@ -192,6 +194,11 @@ exports.addToCart = async (req, res) => {
     }
     await user.save({ validateBeforeSave: false });
 
+    await user.populate({
+      path: 'cart', populate: {
+        path: 'product'
+      }
+    })
     res.status(201).json({
       status: 'success',
       data: user
@@ -205,17 +212,17 @@ exports.addToCart = async (req, res) => {
     })
 
   }
-
-
 }
 exports.deleteFromCart = async (req, res) => {
   try {
     const user = req.user;
     const { deleteone } = req.body;
-    console.log(deleteone);
+
+
     //delete 
     //deleteone
     const { tourId } = req.params;
+    console.log(tourId, deleteone);
     const finded = user.cart.find(item => item.product._id == tourId);
     if (finded) {
       if (finded.count == 1) {
