@@ -35,6 +35,11 @@ app.use(helmet());
 //   bookingController.webhookCheckout
 // );
 app.post(
+  '/webhook-checkout',
+  bodyParser.raw({ type: 'application/json' }),
+  bookingController.webhookCheckout
+);
+app.post(
   '/webhook-cash-in',
   bodyParser.raw({ type: 'application/json' }),
   bookingController.webhookCashIn

@@ -8,8 +8,8 @@ router.use(authController.protect);
 router.post('/cash-in', bookingController.cashIn)
 
 router.post('/checkout-wallet', bookingController.purchaseByWallet);
+router.get('/checkout-session', bookingController.getCheckoutSession);
 
-router.get('/checkout-session/:tourId', bookingController.getCheckoutSession);
 
 
 router.use(authController.restrictTo('admin', 'lead-guide'));

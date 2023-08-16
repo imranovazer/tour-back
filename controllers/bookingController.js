@@ -6,6 +6,7 @@ const User = require("../models/User");
 const Booking = require("../models/Booking");
 
 exports.purchaseByWallet = async (req, res) => {
+  7
   try {
     const user = req.user;
     let totalPrice = 0;
@@ -56,6 +57,7 @@ exports.cashIn = async (req, res) => {
   try {
     const { amount } = req.body;
     const session = await stripe.checkout.sessions.create({
+
       payment_method_types: ["card"],
       mode: "payment",
 
@@ -96,55 +98,69 @@ exports.cashIn = async (req, res) => {
   }
 };
 
-exports.getCheckoutSession = async (req, res, next) => {
+
+exports.getCheckoutSession = async (req, res) => {
   try {
-    // 1) Get the currently booked tour
-    const tour = await Tour.findById(req.params.tourId);
-    // console.log(tour);
+    const user = req.user;
+    const session = await stripe.checkout.sessions.create(
+      {
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items: user.cart.map(item => {
+          return {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: item.product.name,
+                description: item.product.summary,
+                images: [
+                  `https://9afe-82-194-17-140.ngrok-free.app/img/tours/${item.product.imageCover}`
+                ],
 
-    // 2) Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-      success_url: `${process.env.FRONT_URL}/payment-success`,
-      cancel_url: `${process.env.FRONT_URL}/payment-fail/${tour.slug}`,
-      customer_email: req.user.email,
-      client_reference_id: req.params.tourId,
-      line_items: [
-        {
-          name: `${tour.name} Tour`,
-          description: tour.summary,
-          images: [
-            `${req.protocol}://${req.get("host")}/img/tours/${tour.imageCover}`,
-          ],
-          amount: tour.price * 100,
-          currency: "usd",
-          quantity: 1,
-        },
-      ],
-    });
 
-    // 3) Create session as response
-    res.status(200).json({
-      status: "success",
-      session,
-    });
+              },
+
+              unit_amount: item.product.price * 100
+
+            },
+            quantity: item.count
+          }
+        }),
+        success_url: `${process.env.FRONT_URL}/payment-success`,
+        cancel_url: `${process.env.FRONT_URL}/payment-fail/`,
+        customer_email: req.user.email,
+      }
+    )
+
+    return res.status(200).json({
+      status: 'success',
+      data: session
+    })
+
   } catch (error) {
-    res.status(500).json({
-      status: "fail",
-      error,
-    });
+    console.log(error);
+    return res.status(500).json({
+      status: 'fail',
+      error
+    })
   }
-};
+
+}
 
 const createBookingCheckout = async (session) => {
-  const tour = session.client_reference_id;
-  const user = (await User.findOne({ email: session.customer_email })).id;
-  const price = session.display_items[0].amount / 100;
-  await Booking.create({ tour, user, price });
+
+  console.log("bookingCheckout");
+  // const user = await User.findOne({ email: session.customer_email });
+
+  // const price = session.amount_total / 100;
+
+  // user.wallet = user.wallet - price;
+
+  // await user.save({ validateBeforeSave: false });
 };
 
 const cashInToUser = async (session) => {
+  console.log("CashINCheckout");
   const user = await User.findOne({ email: session.customer_email });
 
   const price = session.amount_total / 100;
@@ -154,38 +170,35 @@ const cashInToUser = async (session) => {
   await user.save({ validateBeforeSave: false });
 };
 
-exports.webhookCheckout = (req, res, next) => {
-  const signature = req.headers["stripe-signature"];
 
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    return res.status(400).send(`Webhook error: ${err.message}`);
-  }
 
-  if (event.type === "checkout.session.completed")
-    createBookingCheckout(event.data.object);
-
-  res.status(200).json({ received: true });
-};
-
-const secret = "whsec_kUd9Xs4cL6Ie6YShUpkmVD4F7kq3JqtE";
+const cashInSecret = "whsec_kUd9Xs4cL6Ie6YShUpkmVD4F7kq3JqtE";
 exports.webhookCashIn = (req, res, next) => {
   const signature = req.headers["stripe-signature"];
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, signature, secret);
+    event = stripe.webhooks.constructEvent(req.body, signature, cashInSecret);
   } catch (err) {
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
 
   if (event.type === "checkout.session.completed")
     cashInToUser(event.data.object);
+
+  res.status(200).json({ received: true });
+};
+const checkoutSecret = "whsec_LSPmKHeUGPuPoCulXXUMHfootknzDfIJ";
+exports.webhookCheckout = (req, res, next) => {
+  const signature = req.headers["stripe-signature"];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, signature, checkoutSecret);
+  } catch (err) {
+    return res.status(400).send(`Webhook error: ${err.message}`);
+  }
+
+  if (event.type === "checkout.session.completed")
+    createBookingCheckout(event.data.object);
 
   res.status(200).json({ received: true });
 };
