@@ -8,10 +8,33 @@ exports.setTourUserIds = (req, res, next) => {
   next();
 };
 
+
+exports.getMyReviews = async (req, res) => {
+  try {
+    const myId = req.user._id;
+    const reviews = await Review.find({ user: myId });
+    res.status(200).json(
+      {
+        status: 'sucess',
+        data: reviews
+      }
+    )
+  } catch (error) {
+    res.status(500).json(
+      {
+        status: 'fail',
+        error
+      }
+    )
+  }
+}
+
 exports.getAllReviews = async (req, res) => {
   try {
+
     let filter = {};
     if (req.params.tourId) filter = { tour: req.params.tourId };
+
 
     const features = new APIFeatures(Review.find(filter), req.query)
       .filter()

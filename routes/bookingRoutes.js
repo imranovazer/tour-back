@@ -11,18 +11,21 @@ router.post('/checkout-wallet', bookingController.purchaseByWallet);
 router.get('/checkout-session', bookingController.getCheckoutSession);
 
 
+router.route('/my-bookings').get(bookingController.getMyBookings)
 
-router.use(authController.restrictTo('admin', 'lead-guide'));
+
+
 
 // router
 //   .route('/')
 //   .get(bookingController.getAllBookings)
 //   .post(bookingController.createBooking);
 
-// router
-//   .route('/:id')
+
+router
+    .route('/:id')
+    .delete(bookingController.deleteBooking);
 //   .get(bookingController.getBooking)
 //   .patch(bookingController.updateBooking)
-//   .delete(bookingController.deleteBooking);
 
 module.exports = router;

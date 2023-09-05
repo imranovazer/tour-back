@@ -6,7 +6,6 @@ const User = require("../models/User");
 const Booking = require("../models/Booking");
 
 exports.purchaseByWallet = async (req, res) => {
-  7
   try {
     const user = req.user;
     let totalPrice = 0;
@@ -57,7 +56,9 @@ exports.cashIn = async (req, res) => {
   try {
     const { amount } = req.body;
     const session = await stripe.checkout.sessions.create({
-
+      metadata: {
+        transaction_type: 'cash_in'
+      },
       payment_method_types: ["card"],
       mode: "payment",
 
@@ -104,6 +105,7 @@ exports.getCheckoutSession = async (req, res) => {
     const user = req.user;
     const session = await stripe.checkout.sessions.create(
       {
+        metadata: { transaction_type: "direct_payment" },
         payment_method_types: ['card'],
         mode: 'payment',
         line_items: user.cart.map(item => {
@@ -114,7 +116,7 @@ exports.getCheckoutSession = async (req, res) => {
                 name: item.product.name,
                 description: item.product.summary,
                 images: [
-                  `https://9afe-82-194-17-140.ngrok-free.app/img/tours/${item.product.imageCover}`
+                  `https://836c-94-20-66-151.ngrok-free.app/img/tours/${item.product.imageCover}`
                 ],
 
 
@@ -150,17 +152,30 @@ exports.getCheckoutSession = async (req, res) => {
 const createBookingCheckout = async (session) => {
 
   console.log("bookingCheckout");
-  // const user = await User.findOne({ email: session.customer_email });
+  const user = await User.findOne({ email: session.customer_email });
 
-  // const price = session.amount_total / 100;
+  let totalPrice = 0;
+  const bookingData = user.cart.map((item) => {
+    totalPrice = totalPrice + item.count * item.product.price;
+    return { count: item.count, tour: item.product._id }
 
-  // user.wallet = user.wallet - price;
+  });
+  const newBooking = await Booking.create(
+    {
+      products: bookingData,
+      user: user._id,
+      price: totalPrice,
+      paid: true
 
-  // await user.save({ validateBeforeSave: false });
-};
+    }
+  )
+  user.cart = []
+
+  await user.save({ validateBeforeSave: false });
+}
 
 const cashInToUser = async (session) => {
-  console.log("CashINCheckout");
+  console.log("CahINWebhook");
   const user = await User.findOne({ email: session.customer_email });
 
   const price = session.amount_total / 100;
@@ -182,8 +197,9 @@ exports.webhookCashIn = (req, res, next) => {
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
 
-  if (event.type === "checkout.session.completed")
+  if (event.type === "checkout.session.completed" && event.data.object.metadata.transaction_type === "cash_in") {
     cashInToUser(event.data.object);
+  }
 
   res.status(200).json({ received: true });
 };
@@ -197,11 +213,50 @@ exports.webhookCheckout = (req, res, next) => {
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
 
-  if (event.type === "checkout.session.completed")
+  if (event.type === "checkout.session.completed" && event.data.object.metadata.transaction_type === "direct_payment") {
     createBookingCheckout(event.data.object);
+  }
 
   res.status(200).json({ received: true });
 };
+
+
+exports.getMyBookings = async (req, res) => {
+  try {
+    const user = req.user;
+    const bookins = await Booking.find({ user: user._id });
+    res.status(200).json({
+      status: 'success',
+      data: bookins
+    })
+  } catch (error) {
+    res.status(500).json({
+      status: 'fail',
+      error
+    })
+  }
+}
+exports.deleteBooking = async (req, res) => {
+  try {
+    const { id } = req.params
+    const deletedBooking = await Booking.findByIdAndDelete(id);
+
+    res.status(200).json(
+      {
+        status: 'success',
+        data: deletedBooking
+      }
+    )
+
+  } catch (error) {
+    res.status(200).json(
+      {
+        status: 'fail',
+        error
+      }
+    )
+  }
+}
 
 // exports.createBooking = factory.createOne(Booking);
 // exports.getBooking = factory.getOne(Booking);

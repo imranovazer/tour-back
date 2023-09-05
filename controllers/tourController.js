@@ -222,7 +222,7 @@ exports.deleteFromCart = async (req, res) => {
     //delete 
     //deleteone
     const { tourId } = req.params;
-    console.log(tourId, deleteone);
+    
     const finded = user.cart.find(item => item.product._id == tourId);
     if (finded) {
       if (finded.count == 1) {
