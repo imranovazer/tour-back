@@ -19,6 +19,7 @@ const app = express();
 const bookingController = require('./controllers/bookingController')
 
 app.use(cors({
+  origin: '*',
   credentials: true,
 }));
 
