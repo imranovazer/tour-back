@@ -19,7 +19,7 @@ const app = express();
 const bookingController = require('./controllers/bookingController')
 
 app.use(cors({
-  origin: '*',
+  origin: 'https://tour-front-imranovazer.vercel.app',
   credentials: true,
 }));
 
