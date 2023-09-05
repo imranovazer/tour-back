@@ -73,4 +73,8 @@ app.use("/api/users", userRouter);
 app.use("/api/tours", tourRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/bookings", bookingRoutes)
+
+app.get("/", (req, res) => {
+  res.send("Hi in my api")
+})
 module.exports = app;
