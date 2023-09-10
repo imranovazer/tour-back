@@ -1,5 +1,5 @@
 const Review = require("./../models/Review");
-const APIFeatures = require("../utils/apiFeatures");
+
 const { login } = require("./authController");
 exports.setTourUserIds = (req, res, next) => {
   // Allow nested routes
@@ -32,17 +32,8 @@ exports.getMyReviews = async (req, res) => {
 exports.getAllReviews = async (req, res) => {
   try {
 
-    let filter = {};
-    if (req.params.tourId) filter = { tour: req.params.tourId };
-
-
-    const features = new APIFeatures(Review.find(filter), req.query)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
     // const doc = await features.query.explain();
-    const review = await features.query;
+    const review = await Review.find();
 
     // SEND RESPONSE
     res.status(200).json({

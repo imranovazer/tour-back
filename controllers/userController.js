@@ -3,7 +3,7 @@ const sharp = require("sharp");
 const User = require("./../models/User.js");
 const nodemailer = require('nodemailer')
 const multerStorage = multer.memoryStorage();
-
+const bcrypt = require('bcrypt');
 const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image")) {
     cb(null, true);
@@ -63,7 +63,9 @@ exports.resizeUserPhoto = async (req, res, next) => {
 
     if (!req.file) return next();
 
-    req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+    const imageName = req.user.id || req.params.id
+
+    req.file.filename = `user-${imageName}-${Date.now()}.jpeg`;
 
     await sharp(req.file.buffer)
       .resize(500, 500)
@@ -163,7 +165,7 @@ exports.getUserById = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select('+password');
 
     res.status(200).json({
       status: "success",
@@ -182,7 +184,7 @@ exports.updateUser = async (req, res) => {
     const newUser = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    });
+    }).select('+password');
     res.status(200).json({
       status: "success",
       data: newUser,
@@ -190,7 +192,7 @@ exports.updateUser = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: "fail",
-      error,
+      err,
     });
   }
 };
@@ -213,15 +215,16 @@ exports.deleteUserById = async (req, res, next) => {
 };
 exports.createUser = async (req, res, next) => {
   try {
-    const { name, email, photo, role, password, passwordConfirm } = req.body;
-
+    const { name, email, role, password, wallet } = req.body;
+    // const photo = req.file.filename
+    // const passwordToSet = await bcrypt.hash(password, 12);
     const user = await User.create({
       name,
       email,
       password,
-      photo,
       role,
-      passwordConfirm,
+      passwordConfirm: password,
+      wallet,
     });
     res.status(201).json({
       status: "success",
