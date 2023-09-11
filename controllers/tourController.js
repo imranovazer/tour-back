@@ -2,6 +2,7 @@ const multer = require("multer");
 const sharp = require("sharp");
 const Tour = require("./../models/Tour");
 
+const APIFeatures = require("../utils/apiFeatures");
 const multerStorage = multer.memoryStorage();
 const User = require('../models/User')
 const multerFilter = (req, file, cb) => {
@@ -83,11 +84,20 @@ exports.aliasTopTours = (req, res, next) => {
 exports.getAllTours = async (req, res, next) => {
   try {
     // To allow for nested GET reviews on tour (hack)
+    let filter = {};
+    if (req.params.tourId) filter = { tour: req.params.tourId };
+    if (req.query.name) {
+      // Case-insensitive regular expression search for 'name'
+      filter.name = { $regex: new RegExp(req.query.name, 'i') };
+    }
 
+    const features = new APIFeatures(Tour.find(filter), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
-
-
-    const tours = await Tour.find();
+    const tours = await features.query;
 
     res.status(200).json({
       status: "success",

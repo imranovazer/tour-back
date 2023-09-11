@@ -63,7 +63,7 @@ exports.cashIn = async (req, res) => {
       mode: "payment",
 
       success_url: `${process.env.FRONT_URL}/payment-success`,
-      cancel_url: `${process.env.FRONT_URL}/payment-fail/`,
+      cancel_url: `${process.env.FRONT_URL}/payment-fail`,
       customer_email: req.user.email,
       // client_reference_id: req.params.tourId,
 
@@ -129,7 +129,7 @@ exports.getCheckoutSession = async (req, res) => {
           }
         }),
         success_url: `${process.env.FRONT_URL}/payment-success`,
-        cancel_url: `${process.env.FRONT_URL}/payment-fail/`,
+        cancel_url: `${process.env.FRONT_URL}/payment-fail`,
         customer_email: req.user.email,
       }
     )

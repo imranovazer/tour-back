@@ -70,11 +70,11 @@ exports.getReviewById = async (req, res, next) => {
 exports.createReview = async (req, res, next) => {
   try {
 
-    const newReview = await Review.create(req.body);
-
+    const newReview = await Review.create(req.body)
+    const review = await Review.findById(newReview._id);
     res.status(201).json({
       status: "success",
-      data: newReview,
+      data: review,
     });
   } catch (error) {
 
@@ -88,9 +88,9 @@ exports.createReview = async (req, res, next) => {
 exports.updateReview = async (req, res) => {
   try {
 
-    const { rating, review } = req.body;
-    console.log(rating, review);
-    const newReview = await Review.findByIdAndUpdate(req.params.id, { rating, review }, {
+    // const { rating, review } = req.body;
+
+    const newReview = await Review.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     })
