@@ -34,8 +34,41 @@ exports.sendMail = async (req, res) => {
       from: process.env.EMAIL_USERNAME,
       to: 'imranovazer@gmail.com',
       subject: 'Contact us',
-      html: `<h3>Sender email : ${from}<h3>
-      <p>${content}</p>`,
+      html: `
+    <html>
+      <head>
+        <style>
+          /* Add your CSS styles here for formatting */
+          body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #444;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+          h3 {
+            color: #fff;
+          }
+          p {
+            color: #ccc;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h3>Sender email: ${from}</h3>
+          <p>${content}</p>
+        </div>
+      </body>
+    </html>
+  `,
     };
 
     const mail = await transporter.sendMail(mailOptions)

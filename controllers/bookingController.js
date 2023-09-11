@@ -116,7 +116,7 @@ exports.getCheckoutSession = async (req, res) => {
                 name: item.product.name,
                 description: item.product.summary,
                 images: [
-                  `https://tour-back.vercel.app/img/tours/${item.product.imageCover}`
+                  `https://rabbit-amazed-fly.ngrok-free.app/img/tours/${item.product.imageCover}`
                 ],
 
 
