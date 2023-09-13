@@ -19,11 +19,16 @@ const app = express();
 const bookingController = require('./controllers/bookingController')
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://tour-front-imranovazer.vercel.app'],
+  origin: ['http://localhost:5173', 'https://tour-front-chi.vercel.app'],
   credentials: true,
 }));
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   next();
+// });
 
 // app.options("*", cors());
+// app.use(cors('*'));
 
 app.use(express.static(path.join(__dirname, "public")));
 // app.use(express.static('public'))
