@@ -78,12 +78,14 @@ const createSendToken = (user, statusCode, req, res) => {
     expires: new Date(Date.now() + 15 * 60 * 1000),
     httpOnly: true,
     secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+    sameSite: 'None',
 
   });
   res.cookie("refresh", refresh, {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     httpOnly: true,
     secure: req.secure || req.headers["x-forwarded-proto"] === "https",
+    sameSite: 'None',
 
   });
 
@@ -157,11 +159,13 @@ exports.logout = (req, res) => {
   res.cookie("access", "loggedout", {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
+    sameSite: 'None',
 
   });
   res.cookie("refresh", "loggedout", {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
+    sameSite: 'None',
 
   });
   res.status(200).json({ status: "success" });
